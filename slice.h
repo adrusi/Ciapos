@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 #define CIAPOS_SLICE(ID, VAL) \
 typedef void (*ID##_val_deinit)(VAL val); \
@@ -33,12 +33,12 @@ static inline void ID##_deinit(ID *slice) { \
     free(slice->buf); \
 } \
  \
-static inline VAL ID##_get(ID *slice, off_t idx) { \
+static inline VAL ID##_get(ID *slice, ptrdiff_t idx) { \
     assert(idx < slice->len); \
     return slice->buf[idx]; \
 } \
  \
-static inline void ID##_put(ID *slice, off_t idx, VAL val) { \
+static inline void ID##_put(ID *slice, ptrdiff_t idx, VAL val) { \
     assert(idx < slice->len); \
     slice->buf[idx] = val; \
 } \
