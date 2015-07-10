@@ -38,4 +38,7 @@ int ciapos_is_opening_quote(ciapos_codepoint *grapheme);
 int ciapos_is_closing_quote(ciapos_codepoint *grapheme);
 int ciapos_are_matching_quotes(ciapos_codepoint *open, ciapos_codepoint *close);
 
+int ciapos_is_numeric(ciapos_codepoint *grapheme);
+int ciapos_is_sign(ciapos_codepoint *grapheme);
+
 #endif

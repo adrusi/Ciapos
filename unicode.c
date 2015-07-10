@@ -55,3 +55,10 @@ int ciapos_is_closing_quote(ciapos_codepoint *grapheme) { return *grapheme == '"
 int ciapos_are_matching_quotes(ciapos_codepoint *open, ciapos_codepoint *close) {
     return (*open == *close) && *open == '"';
 }
+
+int ciapos_is_numeric(ciapos_codepoint *grapheme) {
+    return *grapheme >= '0' && *grapheme <= '9';
+}
+int ciapos_is_sign(ciapos_codepoint *grapheme) {
+    return *grapheme == '-' || *grapheme == '+';
+}

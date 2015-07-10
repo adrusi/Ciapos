@@ -7,16 +7,18 @@ all: ciapos
 clean:
 	rm -f *.o ciapos
 
-ciapos: main.o symbol.o sexp.o chargen.o utf8.o unicode.c lexutil.c
+ciapos: main.o symbol.o sexp.o chargen.o utf8.o unicode.o lexutil.o token.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(shell $(CC) -MM main.c)
-$(shell $(CC) -MM symbol.c)
-$(shell $(CC) -MM sexp.c)
-$(shell $(CC) -MM chargen.c)
-$(shell $(CC) -MM utf8.c)
-$(shell $(CC) -MM unicode.c)
-$(shell $(CC) -mm lexutil.c)
+gendeps = $(shell $(CC) -MM $(1) | tr -d '\n\\')
+$(call gendeps,main.c)
+$(call gendeps,symbol.c)
+$(call gendeps,sexp.c)
+$(call gendeps,chargen.c)
+$(call gendeps,utf8.c)
+$(call gendeps,unicode.c)
+$(call gendeps,lexutil.c)
+$(call gendeps,token.c)

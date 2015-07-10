@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "unicode.h"
+#include "lexutil.h"
 
 typedef struct ciapos_token {
     enum {
@@ -12,9 +13,10 @@ typedef struct ciapos_token {
         CIAPOS_TOKSTR, // ex: "foo bar"
         CIAPOS_TOKBEG, // ex: (
         CIAPOS_TOKEND, // ex: )
+        CIAPOS_TOKDOT, // .
         CIAPOS_TOKQUOT, // '
         CIAPOS_TOKQQUOT, // `
-        CIPAOS_TOKUQUOT, // ,
+        CIAPOS_TOKUQUOT, // ,
         CIAPOS_TOKSQUOT // ,@
     } tag;
     int line;
@@ -25,14 +27,18 @@ typedef struct ciapos_token {
         int64_t integer;
         double real;
         char const *string;
+        ciapos_codepoint *bracket;
     };
 } ciapos_token;
 
 typedef struct ciapos_tokengen {
     int state;
     int fileid;
-    ciapos_graphemegen *graphemegen;
-} ciapos_lexer;
+    int line;
+    int col;
+    int readerid;
+    ciapos_graphemerewinder src;
+} ciapos_tokengen;
 
 void ciapos_tokengen_init(
     ciapos_tokengen *lexer,
