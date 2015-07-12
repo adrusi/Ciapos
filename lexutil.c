@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 void ciapos_graphemerewinder_init(ciapos_graphemerewinder *self, ciapos_graphemegen *src) {
-    ciapos_graphemebuf_init(&self->buffer, 128, NULL);
+    ciapos_graphemebuf_init(&self->buffer, 128, (ciapos_graphemebuf_val_deinit) free);
     self->offset = 0;
     self->src = src;
 }
@@ -41,9 +41,11 @@ void ciapos_graphemerewinder_rewindby(ciapos_graphemerewinder *self, ptrdiff_t d
 
 void ciapos_graphemerewinder_flush(ciapos_graphemerewinder *self) {
     // TODO is shifting the array efficient enough?
-    for (ptrdiff_t i = 0; i < self->offset && i + self->offset < self->buffer.len; i++) {
+    for (ptrdiff_t i = 0; i < self->offset; i++) {
         ciapos_codepoint *cp;
         if ((cp = ciapos_graphemebuf_get(&self->buffer, i))) free(cp);
+    }
+    for (ptrdiff_t i = 0; i < self->offset && i + self->offset < self->buffer.len; i++) {
         ciapos_graphemebuf_put(
             &self->buffer, i,
             ciapos_graphemebuf_get(&self->buffer, i + self->offset));

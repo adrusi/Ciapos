@@ -15,6 +15,17 @@ static int is_real(ciapos_graphemerewinder *src, ciapos_token *tok);
 static int is_integer(ciapos_graphemerewinder *src, ciapos_token *tok);
 static int is_symbol(ciapos_graphemerewinder *src, ciapos_token *tok);
 
+static void calc_linecol(ciapos_graphemerewinder *src, int *line, int *col) {
+    for (ptrdiff_t i = 0; i < src->offset; i++) {
+        if (ciapos_is_newline(ciapos_graphemebuf_get(&src->buffer, i))) {
+            *col = 1;
+            (*line)++;
+        } else {
+            (*col)++;
+        }
+    }
+}
+
 void ciapos_tokengen_init(ciapos_tokengen *self, ciapos_graphemegen *src, int fileid) {
     self->state = 0;
     self->fileid = fileid;
@@ -41,16 +52,28 @@ int ciapos_tokengen_next(ciapos_tokengen *self, ciapos_token *token) {
     while (ciapos_graphemerewinder_hasnext(&self->src)) {
         ciapos_graphemerewinder_flush(&self->src);
 
-        ciapos_codepoint *a = ciapos_graphemerewinder_next(&self->src);
-        if (!a) {
+        self->probe = ciapos_graphemerewinder_next(&self->src);
+        if (!self->probe) {
             yield (0);
             return 0;
         }
-        if (ciapos_is_whitespace(a)) continue;
+        if (ciapos_is_whitespace(self->probe)) {
+            if (ciapos_is_newline(self->probe)) {
+                self->line++;
+                self->col = 1;
+            } else {
+                self->col++;
+            }
+            continue;
+        }
         else ciapos_graphemerewinder_rewind(&self->src);
 
         for (self->readerid = 0; self->readerid < sizeof(token_readers); self->readerid++) {
             if (token_readers[self->readerid](&self->src, token)) {
+                token->line = self->line;
+                token->col = self->col;
+                token->fileid = self->fileid;
+                calc_linecol(&self->src, &self->line, &self->col);
                 yield (1);
                 break;
             }
@@ -68,7 +91,19 @@ void ciapos_tokengen_deinit(ciapos_tokengen *self) {
 }
 
 void ciapos_token_deinit(ciapos_token *token) {
-
+    switch (token->tag) {
+    case CIAPOS_TOKSYM:
+        free(token->symbol);
+        break;
+    case CIAPOS_TOKSTR:
+        free(token->string);
+        break;
+    case CIAPOS_TOKBEG:
+    case CIAPOS_TOKEND:
+        free(token->bracket);
+        break;
+    default: break;
+    }
 }
 
 static int is_splicing_unquote(ciapos_graphemerewinder *src, ciapos_token *tok) {

@@ -7,39 +7,40 @@
 #include "token.h"
 
 static void print_token(ciapos_token tok) {
+    printf("<stdin>:%d:%d ", tok.line, tok.col);
     switch (tok.tag) {
     case CIAPOS_TOKSYM:
         printf("sym(%s)\n", tok.symbol);
         break;
     case CIAPOS_TOKINT:
-        printf("%ld\n", tok.integer);
+        printf("int(%ld)\n", tok.integer);
         break;
     case CIAPOS_TOKREAL:
-        printf("%f\n", tok.real);
+        printf("real(%f)\n", tok.real);
         break;
     case CIAPOS_TOKSTR:
         printf("str(%s)\n", tok.string);
         break;
     case CIAPOS_TOKBEG:
-        printf("(\n");
+        printf("beg\n");
         break;
     case CIAPOS_TOKEND:
-        printf(")\n");
+        printf("end\n");
         break;
     case CIAPOS_TOKDOT:
-        printf(".\n");
+        printf("dot\n");
         break;
     case CIAPOS_TOKQUOT:
-        printf("'\n");
+        printf("quot\n");
         break;
     case CIAPOS_TOKQQUOT:
-        printf("`\n");
+        printf("qquot\n");
         break;
     case CIAPOS_TOKUQUOT:
-        printf(",\n");
+        printf("uquot\n");
         break;
     case CIAPOS_TOKSQUOT:
-        printf(",@\n");
+        printf("squot\n");
         break;
     }
 }
@@ -63,10 +64,10 @@ int main(int argc, char const *argv[argc]) {
         ciapos_token_deinit(&tok);
     }
 
+    ciapos_tokengen_deinit(&lexer);
+    ciapos_graphemegen_deinit(&unicode);
     ciapos_utf8gen_deinit(&utf8gen);
     ciapos_chargen_deinit(&chargen);
-    ciapos_graphemegen_deinit(&unicode);
-    ciapos_tokengen_deinit(&lexer);
 
     return 0;
 }

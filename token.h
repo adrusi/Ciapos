@@ -23,10 +23,10 @@ typedef struct ciapos_token {
     int col;
     int fileid;
     union {
-        char const *symbol;
+        char *symbol;
         int64_t integer;
         double real;
-        char const *string;
+        char *string;
         ciapos_codepoint *bracket;
     };
 } ciapos_token;
@@ -37,6 +37,7 @@ typedef struct ciapos_tokengen {
     int line;
     int col;
     int readerid;
+    ciapos_codepoint *probe;
     ciapos_graphemerewinder src;
 } ciapos_tokengen;
 
