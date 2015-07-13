@@ -41,8 +41,9 @@ static inline void ID##_deinit(ID *dict) { \
         while (b) { \
             if (dict->key_deinit) dict->key_deinit(b->key); \
             if (dict->val_deinit) dict->val_deinit(b->val); \
-            b = b->next; \
+            ID##_bucket *b_ = b->next; \
             free(b); \
+            b = b_; \
         } \
     } \
     free(dict->buckets); \

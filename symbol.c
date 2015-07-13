@@ -43,7 +43,7 @@ ciapos_symbol ciapos_symbolof(ciapos_symreg *registry, char const *str) {
    ciapos_symbol sym = registry->symcnt++;
    char *newstr = malloc(strlen(str) + 1);
    strcpy(newstr, str);
-   ciapos_sym2str_append(&registry->sym2str, str);
+   ciapos_sym2str_append(&registry->sym2str, newstr);
    ciapos_str2sym_put(&registry->str2sym, newstr, sym);
    return sym;
 }

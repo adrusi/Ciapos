@@ -5,6 +5,9 @@
 #include "unicode.h"
 #include "lexutil.h"
 #include "token.h"
+#include "sexp.h"
+#include "read.h"
+#include "symbol.h"
 
 static void print_token(ciapos_token tok) {
     printf("<stdin>:%d:%d ", tok.line, tok.col);
@@ -45,6 +48,55 @@ static void print_token(ciapos_token tok) {
     }
 }
 
+static void print_sexp(ciapos_symreg *registry, ciapos_sexp sexp);
+
+static void print_tuple(ciapos_symreg *registry, ciapos_sexp sexp) {
+    for (ptrdiff_t i = 0; i < sexp.tuple->length - 1; i++) {
+        print_sexp(registry, sexp.tuple->buffer[i]);
+        printf(" . ");
+    }
+    print_sexp(registry, sexp.tuple->buffer[sexp.tuple->length - 1]);
+    printf(")");
+}
+static void print_sexp(ciapos_symreg *registry, ciapos_sexp sexp) {
+    switch (sexp.tag) {
+    case CIAPOS_TAGNIL:
+        printf("()");
+        break;
+    case CIAPOS_TAGSYM:
+        printf("%s", ciapos_sym2str_get(&registry->sym2str, sexp.symbol));
+        break;
+    case CIAPOS_TAGINT:
+        printf("%ld", sexp.integer);
+        break;
+    case CIAPOS_TAGREAL:
+        printf("%f", sexp.real);
+        break;
+    case CIAPOS_TAGSTR:
+        printf("\"");
+        for (ptrdiff_t i = 0; i < sexp.string->length; i++) {
+            printf("%c", sexp.string->buffer[i]);
+        }
+        printf("\"");
+        break;
+    case CIAPOS_TAGFN:
+        printf("<FUNCTION>");
+        break;
+    case CIAPOS_TAGOPAQUE:
+        printf("<OPAQUE>");
+        break;
+    case CIAPOS_TAGENV:
+        printf("<ENVIRONMENT>");
+        break;
+    default:
+        printf("#%s", ciapos_sym2str_get(&registry->sym2str, sexp.tag));
+        // fallthrough
+    case CIAPOS_TAGTUP:
+        printf("(");
+        print_tuple(registry, sexp);
+    }
+}
+
 int main(int argc, char const *argv[argc]) {
     ciapos_chargen chargen;
     ciapos_file_chargen_init(&chargen, stdin);
@@ -57,13 +109,25 @@ int main(int argc, char const *argv[argc]) {
 
     ciapos_tokengen lexer;
     ciapos_tokengen_init(&lexer, &unicode, 0);
-    
-    ciapos_token tok;
-    while (ciapos_tokengen_next(&lexer, &tok)) {
-        print_token(tok);
-        ciapos_token_deinit(&tok);
-    }
 
+    ciapos_symreg registry;
+    ciapos_symreg_init(&registry);
+
+    ciapos_gc_header *top_of_heap = NULL;
+
+    ciapos_reader reader;
+    ciapos_reader_init(&reader, &lexer, &registry, &top_of_heap);
+    
+    ciapos_sexp sexp;
+    ciapos_reader_error err;
+    while (!(err = ciapos_reader_next(&reader, &sexp))) {
+        print_sexp(&registry, sexp);
+        printf("\n");
+    }
+    if (err) printf("ERROR %d\n", err);
+
+    ciapos_reader_deinit(&reader);
+    ciapos_symreg_deinit(&registry);
     ciapos_tokengen_deinit(&lexer);
     ciapos_graphemegen_deinit(&unicode);
     ciapos_utf8gen_deinit(&utf8gen);

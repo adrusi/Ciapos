@@ -64,3 +64,7 @@ ciapos_sexp ciapos_mktuple(ciapos_gc_header **heap, size_t len) {
     return (ciapos_sexp) { .tag = CIAPOS_TAGTUP, .debug_info = 0, .tuple = tup };
 }
 
+ciapos_sexp ciapos_show(ciapos_sexp sexp) {
+    // TODO implement ciapos_show
+        
+}

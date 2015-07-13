@@ -8,6 +8,7 @@ void ciapos_graphemerewinder_init(ciapos_graphemerewinder *self, ciapos_grapheme
 }
     
 void ciapos_graphemerewinder_deinit(ciapos_graphemerewinder *self) {
+    self->offset = self->buffer.len;
     ciapos_graphemerewinder_flush(self);
     ciapos_graphemebuf_deinit(&self->buffer);
 }

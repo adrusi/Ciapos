@@ -15,6 +15,8 @@ static inline unsigned long ciapos_str_hash(char const *_str) {
     return hash;
 }
 static inline int ciapos_str_eq(char const *a, char const *b) {
+    if (!a && !b) return 1;
+    if ((!a && b) || (a && !b)) return 0;
     while (*a == *b && *a) a++, b++;
     return *a == *b;
 }

@@ -82,6 +82,9 @@ typedef struct ciapos_environment {
 
 void ciapos_gc_deinit(ciapos_gc_header *obj);
 
+static inline ciapos_sexp ciapos_mknil(void) {
+    return (ciapos_sexp) { .tag = CIAPOS_TAGNIL, .debug_info = 0 };
+}
 static inline ciapos_sexp ciapos_mksymbol(ciapos_symbol a) {
     return (ciapos_sexp) { .tag = CIAPOS_TAGSYM, .debug_info = 0, .symbol = a };
 }
@@ -115,6 +118,10 @@ static inline ciapos_sexp ciapos_tuple_get(ciapos_sexp a, off_t idx) {
     assert(a.tag >= CIAPOS_TAGTUP);
     return a.tuple->buffer[idx];
 }
+static inline ciapos_sexp *ciapos_tuple_ref(ciapos_sexp a, off_t idx) {
+    assert(a.tag >= CIAPOS_TAGTUP);
+    return &a.tuple->buffer[idx];
+}
 static inline void ciapos_tuple_put(ciapos_sexp a, off_t idx, ciapos_sexp b) {
     assert(a.tag >= CIAPOS_TAGTUP);
     a.tuple->buffer[idx] = b;
@@ -125,5 +132,7 @@ static inline void ciapos_sexp_set_type(ciapos_sexp *sexp, ciapos_symbol type) {
     sexp->tag = type;
     sexp->tuple->header.tag = type;
 }
+
+ciapos_sexp ciapos_show(ciapos_sexp sexp);
 
 #endif
