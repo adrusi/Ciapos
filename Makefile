@@ -7,7 +7,7 @@ all: ciapos
 clean:
 	rm -f *.o ciapos
 
-ciapos: main.o symbol.o sexp.o chargen.o utf8.o unicode.o lexutil.o token.o read.o
+ciapos: main.o symbol.o sexp.o chargen.o utf8.o unicode.o lexutil.o token.o read.o vm.o builtin.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 %.o: %.c
@@ -23,3 +23,5 @@ $(call gendeps,unicode.c)
 $(call gendeps,lexutil.c)
 $(call gendeps,token.c)
 $(call gendeps,read.c)
+$(call gendeps,vm.c)
+$(call gendeps,builtin.c)

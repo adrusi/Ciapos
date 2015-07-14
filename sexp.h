@@ -100,11 +100,20 @@ ciapos_sexp ciapos_mkopaque(ciapos_gc_header **heap, ciapos_symbol description, 
 ciapos_sexp ciapos_mkenvironment(ciapos_gc_header **heap, size_t nbuckets);
 ciapos_sexp ciapos_mktuple(ciapos_gc_header **heap, size_t len);
 
+static inline ciapos_sexp ciapos_function_eval(ciapos_sexp function, ciapos_sexp args) {
+    assert(function.tag == CIAPOS_TAGFN);
+    return function.function->evaluator(function.function->fbody, function.function->env, args);
+}
+
 static inline void *ciapos_opaque_get(ciapos_sexp a) {
     assert(a.tag == CIAPOS_TAGOPAQUE);
     return a.opaque->buffer;
 }
 
+static inline int ciapos_environment_has(ciapos_sexp a, ciapos_symbol key) {
+    assert(a.tag == CIAPOS_TAGENV);
+    return ciapos_sym2sexp_has(&a.environment->bindings, key);
+}
 static inline ciapos_sexp ciapos_environment_get(ciapos_sexp a, ciapos_symbol key) {
     assert(a.tag == CIAPOS_TAGENV);
     return ciapos_sym2sexp_get(&a.environment->bindings, key);

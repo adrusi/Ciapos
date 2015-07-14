@@ -8,6 +8,7 @@
 #include "sexp.h"
 #include "read.h"
 #include "symbol.h"
+#include "vm.h"
 
 static void print_token(ciapos_token tok) {
     printf("<stdin>:%d:%d ", tok.line, tok.col);
@@ -110,24 +111,22 @@ int main(int argc, char const *argv[argc]) {
     ciapos_tokengen lexer;
     ciapos_tokengen_init(&lexer, &unicode, 0);
 
-    ciapos_symreg registry;
-    ciapos_symreg_init(&registry);
-
-    ciapos_gc_header *top_of_heap = NULL;
+    ciapos_vm vm;
+    ciapos_vm_init(&vm);
 
     ciapos_reader reader;
-    ciapos_reader_init(&reader, &lexer, &registry, &top_of_heap);
+    ciapos_reader_init(&reader, &lexer, &vm.registry, &vm.top_of_heap);
     
     ciapos_sexp sexp;
     ciapos_reader_error err;
     while (!(err = ciapos_reader_next(&reader, &sexp))) {
-        print_sexp(&registry, sexp);
+        print_sexp(&vm.registry, ciapos_vm_eval(&vm, sexp));
         printf("\n");
     }
     if (err) printf("ERROR %d\n", err);
 
     ciapos_reader_deinit(&reader);
-    ciapos_symreg_deinit(&registry);
+    ciapos_vm_deinit(&vm);
     ciapos_tokengen_deinit(&lexer);
     ciapos_graphemegen_deinit(&unicode);
     ciapos_utf8gen_deinit(&utf8gen);
