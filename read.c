@@ -83,16 +83,16 @@ static ciapos_reader_error read(ciapos_reader *self, ciapos_token tok, ciapos_se
         err = CIAPOS_READERR_UNEXPECTED_TOKDOT;
         goto error;
     case CIAPOS_TOKQUOT:
-        if ((err = quote(self, sexp, "quote"))) goto error;
+        if ((err = quote(self, sexp, "std:quote"))) goto error;
         break;
     case CIAPOS_TOKQQUOT:
-        if ((err = quote(self, sexp, "quasi-quote"))) goto error;
+        if ((err = quote(self, sexp, "std:quasi-quote"))) goto error;
         break;
     case CIAPOS_TOKUQUOT:
-        if ((err = quote(self, sexp, "unquote"))) goto error;
+        if ((err = quote(self, sexp, "std:unquote"))) goto error;
         break;
     case CIAPOS_TOKSQUOT:
-        if ((err = quote(self, sexp, "unquote-splicing"))) goto error;
+        if ((err = quote(self, sexp, "std:unquote-splicing"))) goto error;
         break;
     }
     sexp->debug_info = debuginfo(tok);

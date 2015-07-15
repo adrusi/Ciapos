@@ -10,6 +10,8 @@ static ciapos_sexp install_builtins(ciapos_vm *self, ciapos_sexp thread) {
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "*"), ciapos_builtin_multiply);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "/"), ciapos_builtin_divide);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "%"), ciapos_builtin_mod);
+    ciapos_environment_put(env, ciapos_symbolof(&self->registry, "alias"), ciapos_builtin_alias);
+    ciapos_environment_put(env, ciapos_symbolof(&self->registry, "in-pkg"), ciapos_builtin_inpkg);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "typeof"), ciapos_builtin_typeof);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "with-type"), ciapos_builtin_withtype);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "tuple"), ciapos_builtin_tuple);
@@ -69,7 +71,7 @@ ciapos_sexp ciapos_vm_eval(ciapos_vm *self, ciapos_sexp expr) {
         assert(expr.tuple->length == 2);
         ciapos_sexp fexpr = ciapos_tuple_get(expr, 0);
         if (fexpr.tag == CIAPOS_TAGSYM) {
-            if (fexpr.symbol == ciapos_symbolof(&self->registry, "quote")) {
+            if (fexpr.symbol == ciapos_symbolof(&self->registry, "std:quote")) {
                 ciapos_sexp args = ciapos_tuple_get(expr, 1);
                 assert(args.tag == CIAPOS_TAGTUP);
                 assert(args.tuple->length == 2);
@@ -79,6 +81,6 @@ ciapos_sexp ciapos_vm_eval(ciapos_vm *self, ciapos_sexp expr) {
         }
         ciapos_sexp function = ciapos_vm_eval(self, fexpr);
         assert(function.tag == CIAPOS_TAGFN);
-        return ciapos_function_eval(function, eval_args(self, ciapos_tuple_get(expr, 1)));
+        return ciapos_function_eval(function, self, eval_args(self, ciapos_tuple_get(expr, 1)));
     }
 }

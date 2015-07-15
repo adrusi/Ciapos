@@ -10,45 +10,6 @@
 #include "symbol.h"
 #include "vm.h"
 
-static void print_token(ciapos_token tok) {
-    printf("<stdin>:%d:%d ", tok.line, tok.col);
-    switch (tok.tag) {
-    case CIAPOS_TOKSYM:
-        printf("sym(%s)\n", tok.symbol);
-        break;
-    case CIAPOS_TOKINT:
-        printf("int(%ld)\n", tok.integer);
-        break;
-    case CIAPOS_TOKREAL:
-        printf("real(%f)\n", tok.real);
-        break;
-    case CIAPOS_TOKSTR:
-        printf("str(%s)\n", tok.string);
-        break;
-    case CIAPOS_TOKBEG:
-        printf("beg\n");
-        break;
-    case CIAPOS_TOKEND:
-        printf("end\n");
-        break;
-    case CIAPOS_TOKDOT:
-        printf("dot\n");
-        break;
-    case CIAPOS_TOKQUOT:
-        printf("quot\n");
-        break;
-    case CIAPOS_TOKQQUOT:
-        printf("qquot\n");
-        break;
-    case CIAPOS_TOKUQUOT:
-        printf("uquot\n");
-        break;
-    case CIAPOS_TOKSQUOT:
-        printf("squot\n");
-        break;
-    }
-}
-
 static void print_sexp(ciapos_symreg *registry, ciapos_sexp sexp);
 
 static void print_tuple(ciapos_symreg *registry, ciapos_sexp sexp) {

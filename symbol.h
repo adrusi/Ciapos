@@ -33,6 +33,7 @@ typedef struct {
     uint32_t symcnt;
     ciapos_sym2str sym2str;
     ciapos_str2sym str2sym;
+    char pkgname[256];
 } ciapos_symreg;
 
 #define CIAPOS_TAGNIL 0
@@ -48,6 +49,8 @@ typedef struct {
 void ciapos_symreg_init(ciapos_symreg *registry);
 void ciapos_symreg_deinit(ciapos_symreg *registry);
 ciapos_symbol ciapos_symbolof(ciapos_symreg *registry, char const *str);
+void ciapos_symreg_setpkg(ciapos_symreg *self, char const *pkgname);
+void ciapos_symreg_alias(ciapos_symreg *self, ciapos_symbol newname, ciapos_symbol oldname);
 
 #endif
 

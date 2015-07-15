@@ -47,7 +47,9 @@ typedef struct ciapos_sexp {
     };
 } ciapos_sexp;
 
+struct ciapos_vm;
 typedef ciapos_sexp (*ciapos_function_evaluator)(
+    struct ciapos_vm *vm,
     ciapos_sexp fbody,
     ciapos_sexp env,
     ciapos_sexp args);
@@ -100,9 +102,9 @@ ciapos_sexp ciapos_mkopaque(ciapos_gc_header **heap, ciapos_symbol description, 
 ciapos_sexp ciapos_mkenvironment(ciapos_gc_header **heap, size_t nbuckets);
 ciapos_sexp ciapos_mktuple(ciapos_gc_header **heap, size_t len);
 
-static inline ciapos_sexp ciapos_function_eval(ciapos_sexp function, ciapos_sexp args) {
+static inline ciapos_sexp ciapos_function_eval(ciapos_sexp function, struct ciapos_vm *vm, ciapos_sexp args) {
     assert(function.tag == CIAPOS_TAGFN);
-    return function.function->evaluator(function.function->fbody, function.function->env, args);
+    return function.function->evaluator(vm, function.function->fbody, function.function->env, args);
 }
 
 static inline void *ciapos_opaque_get(ciapos_sexp a) {
@@ -142,6 +144,6 @@ static inline void ciapos_sexp_set_type(ciapos_sexp *sexp, ciapos_symbol type) {
     sexp->tuple->header.tag = type;
 }
 
-ciapos_sexp ciapos_show(ciapos_sexp sexp);
+#include "vm.h"
 
 #endif

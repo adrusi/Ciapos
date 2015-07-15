@@ -10,6 +10,7 @@ void ciapos_symreg_init(ciapos_symreg *registry) {
     registry->symcnt = 0;
     ciapos_sym2str_init(&registry->sym2str, 256, symname_deinit);
     ciapos_str2sym_init(&registry->str2sym, 256, NULL, NULL);
+    strcpy(registry->pkgname, "std");
     // reserve the correct IDs for the builtin symbols
     ciapos_symbolof(registry, "nil");
     ciapos_symbolof(registry, "symbol");
@@ -36,14 +37,44 @@ void ciapos_symreg_deinit(ciapos_symreg *registry) {
     ciapos_sym2str_deinit(&registry->sym2str);
 }
 
+static int is_qualified(char const *str) {
+    while (*str) {
+        if (*str == ':') return 1;
+        str++;
+    }
+    return 0;
+}
+
 ciapos_symbol ciapos_symbolof(ciapos_symreg *registry, char const *str) {
-   if (ciapos_str2sym_has(&registry->str2sym, str)) {
-       return ciapos_str2sym_get(&registry->str2sym, str);
-   }
-   ciapos_symbol sym = registry->symcnt++;
-   char *newstr = malloc(strlen(str) + 1);
-   strcpy(newstr, str);
-   ciapos_sym2str_append(&registry->sym2str, newstr);
-   ciapos_str2sym_put(&registry->str2sym, newstr, sym);
-   return sym;
+    char *newstr;
+    if (!is_qualified(str)) {
+        newstr = malloc(strlen(registry->pkgname + 1 + strlen(str) + 1));
+        strcpy(newstr, registry->pkgname);
+        strcat(newstr, ":");
+        strcat(newstr, str);
+        if (ciapos_str2sym_has(&registry->str2sym, newstr)) {
+            ciapos_symbol sym = ciapos_str2sym_get(&registry->str2sym, newstr);
+            free(newstr);
+            return sym;
+        }
+    } else {
+        if (ciapos_str2sym_has(&registry->str2sym, str)) {
+            return ciapos_str2sym_get(&registry->str2sym, str);
+        }
+        newstr = malloc(strlen(str) + 1);
+        strcpy(newstr, str);
+    }
+    ciapos_symbol sym = registry->symcnt++;
+    ciapos_sym2str_append(&registry->sym2str, newstr);
+    ciapos_str2sym_put(&registry->str2sym, newstr, sym);
+    return sym;
+}
+
+void ciapos_symreg_setpkg(ciapos_symreg *self, char const *pkgname) {
+    assert(strlen(pkgname) <= 255);
+    strcpy(self->pkgname, pkgname);
+}
+
+void ciapos_symreg_alias(ciapos_symreg *self, ciapos_symbol newname, ciapos_symbol oldname) {
+    ciapos_str2sym_put(&self->str2sym, ciapos_sym2str_get(&self->sym2str, newname), oldname);
 }
