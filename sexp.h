@@ -144,6 +144,12 @@ static inline void ciapos_sexp_set_type(ciapos_sexp *sexp, ciapos_symbol type) {
     sexp->tuple->header.tag = type;
 }
 
+#ifndef NDEBUG
+void ciapos_sexp_debug(ciapos_symreg *registry, ciapos_sexp sexp);
+#else
+#define ciapos_sexp_debug(r, s)
+#endif
+
 #include "vm.h"
 
 #endif

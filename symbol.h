@@ -48,9 +48,15 @@ typedef struct {
 
 void ciapos_symreg_init(ciapos_symreg *registry);
 void ciapos_symreg_deinit(ciapos_symreg *registry);
-ciapos_symbol ciapos_symbolof(ciapos_symreg *registry, char const *str);
+ciapos_symbol ciapos_symbolof_pkg(ciapos_symreg *registry, char const *pkg, char const *str);
+static inline ciapos_symbol ciapos_symbolof(ciapos_symreg *registry, char const *str) {
+    return ciapos_symbolof_pkg(registry, registry->pkgname, str);
+}
 void ciapos_symreg_setpkg(ciapos_symreg *self, char const *pkgname);
 void ciapos_symreg_alias(ciapos_symreg *self, ciapos_symbol newname, ciapos_symbol oldname);
+static inline char const *ciapos_symname(ciapos_symreg *self, ciapos_symbol sym) {
+    return ciapos_sym2str_get(&self->sym2str, sym);
+}
 
 #endif
 

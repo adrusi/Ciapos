@@ -45,11 +45,11 @@ static int is_qualified(char const *str) {
     return 0;
 }
 
-ciapos_symbol ciapos_symbolof(ciapos_symreg *registry, char const *str) {
+ciapos_symbol ciapos_symbolof_pkg(ciapos_symreg *registry, char const *pkg, char const *str) {
     char *newstr;
     if (!is_qualified(str)) {
-        newstr = malloc(strlen(registry->pkgname + 1 + strlen(str) + 1));
-        strcpy(newstr, registry->pkgname);
+        newstr = malloc(strlen(pkg) + 1 + strlen(str) + 1);
+        strcpy(newstr, pkg);
         strcat(newstr, ":");
         strcat(newstr, str);
         if (ciapos_str2sym_has(&registry->str2sym, newstr)) {

@@ -10,55 +10,6 @@
 #include "symbol.h"
 #include "vm.h"
 
-static void print_sexp(ciapos_symreg *registry, ciapos_sexp sexp);
-
-static void print_tuple(ciapos_symreg *registry, ciapos_sexp sexp) {
-    for (ptrdiff_t i = 0; i < sexp.tuple->length - 1; i++) {
-        print_sexp(registry, sexp.tuple->buffer[i]);
-        printf(" . ");
-    }
-    print_sexp(registry, sexp.tuple->buffer[sexp.tuple->length - 1]);
-    printf(")");
-}
-static void print_sexp(ciapos_symreg *registry, ciapos_sexp sexp) {
-    switch (sexp.tag) {
-    case CIAPOS_TAGNIL:
-        printf("()");
-        break;
-    case CIAPOS_TAGSYM:
-        printf("%s", ciapos_sym2str_get(&registry->sym2str, sexp.symbol));
-        break;
-    case CIAPOS_TAGINT:
-        printf("%ld", sexp.integer);
-        break;
-    case CIAPOS_TAGREAL:
-        printf("%f", sexp.real);
-        break;
-    case CIAPOS_TAGSTR:
-        printf("\"");
-        for (ptrdiff_t i = 0; i < sexp.string->length; i++) {
-            printf("%c", sexp.string->buffer[i]);
-        }
-        printf("\"");
-        break;
-    case CIAPOS_TAGFN:
-        printf("<FUNCTION>");
-        break;
-    case CIAPOS_TAGOPAQUE:
-        printf("<OPAQUE>");
-        break;
-    case CIAPOS_TAGENV:
-        printf("<ENVIRONMENT>");
-        break;
-    default:
-        printf("#%s", ciapos_sym2str_get(&registry->sym2str, sexp.tag));
-        // fallthrough
-    case CIAPOS_TAGTUP:
-        printf("(");
-        print_tuple(registry, sexp);
-    }
-}
-
 int main(int argc, char const *argv[argc]) {
     ciapos_chargen chargen;
     ciapos_file_chargen_init(&chargen, stdin);
@@ -81,7 +32,7 @@ int main(int argc, char const *argv[argc]) {
     ciapos_sexp sexp;
     ciapos_reader_error err;
     while (!(err = ciapos_reader_next(&reader, &sexp))) {
-        print_sexp(&vm.registry, ciapos_vm_eval(&vm, sexp));
+        ciapos_sexp_debug(&vm.registry, ciapos_vm_eval(&vm, sexp));
         printf("\n");
     }
     if (err) printf("ERROR %d\n", err);
