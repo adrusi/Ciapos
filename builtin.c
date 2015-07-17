@@ -208,3 +208,22 @@ static ciapos_sexp inpkg_evaluator(ciapos_vm *vm, ciapos_sexp _fbody, ciapos_sex
 }
 
 METADATA(inpkg);
+
+static ciapos_sexp setexpansion_evaluator(ciapos_vm *vm, ciapos_sexp _fbody, ciapos_sexp _env, ciapos_sexp args) {
+    ciapos_sexp_debug(&vm->registry, args);
+    printf("\n");
+    assert(args.tag == CIAPOS_TAGTUP);
+    assert(args.tuple->length == 2);
+    ciapos_sexp car = ciapos_tuple_get(args, 0);
+    assert(car.tag >= CIAPOS_TAGSYM);
+    ciapos_sexp cdr = ciapos_tuple_get(args, 1);
+    assert(cdr.tag == CIAPOS_TAGTUP);
+    assert(cdr.tuple->length == 2);
+    ciapos_sexp cdar = ciapos_tuple_get(cdr, 0);
+    assert(cdar.tag == CIAPOS_TAGFN);
+    assert(ciapos_tuple_get(cdr, 1).tag == CIAPOS_TAGNIL);
+    ciapos_sym2sexp_put(&vm->macros, car.symbol, cdar);
+    return (ciapos_sexp) { .tag = CIAPOS_TAGNIL, .debug_info = 0 };
+}
+
+METADATA(setexpansion);

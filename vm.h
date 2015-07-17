@@ -3,11 +3,13 @@
 
 #include "sexp.h"
 #include "symbol.h"
+#include "dict.h"
 
 typedef struct ciapos_vm {
     ciapos_symreg registry;
     ciapos_gc_header *top_of_heap;
     ciapos_sexp stack;
+    ciapos_sym2sexp macros;
 } ciapos_vm;
 
 void ciapos_vm_init(ciapos_vm *self);

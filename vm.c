@@ -18,6 +18,7 @@ static ciapos_sexp install_builtins(ciapos_vm *self, ciapos_sexp thread) {
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "tuple"), ciapos_builtin_tuple);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "tuple-set!"), ciapos_builtin_set);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "tuple-get"), ciapos_builtin_get);
+    ciapos_environment_put(env, ciapos_symbolof(&self->registry, "set-expansion"), ciapos_builtin_setexpansion);
     ciapos_sexp newthread = ciapos_mktuple(&self->top_of_heap, 2);
     ciapos_tuple_put(newthread, 0, env);
     ciapos_tuple_put(newthread, 1, thread);
@@ -29,6 +30,7 @@ void ciapos_vm_init(ciapos_vm *self) {
     self->top_of_heap = NULL;
     self->stack = (ciapos_sexp) { .tag = CIAPOS_TAGNIL, .debug_info = 0 };
     self->stack = install_builtins(self, self->stack);
+    ciapos_sym2sexp_init(&self->macros, 256, NULL, NULL);
 }
 
 void ciapos_vm_deinit(ciapos_vm *self) {
@@ -108,7 +110,58 @@ static ciapos_sexp usercode_eval(ciapos_vm *vm, ciapos_sexp fbody, ciapos_sexp e
     return result;
 }
 
+static ciapos_sexp parsefn(ciapos_vm *self, ciapos_sexp stack, ciapos_sexp args) {
+    assert(args.tag == CIAPOS_TAGTUP);
+    assert(args.tuple->length == 2);
+    ciapos_sexp paramlist = ciapos_tuple_get(args, 0);
+    for (ciapos_sexp a = paramlist;
+         a.tag != CIAPOS_TAGNIL;
+         a = ciapos_tuple_get(a, 1))
+    {
+        assert(a.tag == CIAPOS_TAGTUP);
+        assert(a.tuple->length == 2);
+        assert(ciapos_tuple_get(a, 0).tag == CIAPOS_TAGSYM);
+    }
+    assert(ciapos_tuple_get(args, 1).tag != CIAPOS_TAGNIL);
+    return ciapos_mkfunction(&self->top_of_heap, usercode_eval, args, stack);
+}
+
+static ciapos_sexp expand_subexpr(ciapos_vm *self, ciapos_sexp expr);
+static ciapos_sexp macroexpand(ciapos_vm *self, ciapos_sexp expr) {
+    if (expr.tag != CIAPOS_TAGTUP) return expr;
+    ciapos_sexp car = ciapos_tuple_get(expr, 0);
+    if (car.tag == CIAPOS_TAGSYM && ciapos_sym2sexp_has(&self->macros, car.symbol)) {
+        ciapos_sexp result = ciapos_function_eval(
+            ciapos_sym2sexp_get(&self->macros, car.symbol),
+            self,
+            ciapos_tuple_get(expr, 1));
+        result.debug_info = expr.debug_info;
+        return result;
+    }
+    return expand_subexpr(self, expr);
+}
+
+static ciapos_sexp expand_subexpr(ciapos_vm *self, ciapos_sexp expr) {
+    ciapos_sexp newexpr = ciapos_mktuple(&self->top_of_heap, expr.tuple->length);
+    newexpr.debug_info = expr.debug_info;
+    ptrdiff_t i;
+    for (i = 0; i < expr.tuple->length - 1; i++) {
+        if (ciapos_tuple_get(expr, i).tag == CIAPOS_TAGTUP) {
+            ciapos_tuple_put(newexpr, i, macroexpand(self, ciapos_tuple_get(expr, i)));
+        } else {
+            ciapos_tuple_put(newexpr, i, ciapos_tuple_get(expr, i));
+        }
+    }
+    if (ciapos_tuple_get(expr, i).tag == CIAPOS_TAGTUP) {
+        ciapos_tuple_put(newexpr, i, expand_subexpr(self, ciapos_tuple_get(expr, i)));
+    } else {
+        ciapos_tuple_put(newexpr, i, ciapos_tuple_get(expr, i));
+    }
+    return newexpr;
+}
+
 static ciapos_sexp ciapos_vm_eval_withstack(ciapos_vm *self, ciapos_sexp stack, ciapos_sexp expr) {
+    expr = macroexpand(self, expr);
     switch (expr.tag) {
     case CIAPOS_TAGNIL: case CIAPOS_TAGINT: case CIAPOS_TAGREAL: case CIAPOS_TAGSTR: case CIAPOS_TAGOPAQUE:
     case CIAPOS_TAGFN: return expr;
@@ -126,23 +179,12 @@ static ciapos_sexp ciapos_vm_eval_withstack(ciapos_vm *self, ciapos_sexp stack, 
             }
             if (fexpr.symbol == ciapos_symbolof(&self->registry, "std:lambda")) {
                 ciapos_sexp args = ciapos_tuple_get(expr, 1);
-                assert(args.tag == CIAPOS_TAGTUP);
-                assert(args.tuple->length == 2);
-                ciapos_sexp paramlist = ciapos_tuple_get(args, 0);
-                for (ciapos_sexp a = paramlist;
-                     a.tag != CIAPOS_TAGNIL;
-                     a = ciapos_tuple_get(a, 1))
-                {
-                    assert(a.tag == CIAPOS_TAGTUP);
-                    assert(a.tuple->length == 2);
-                    assert(ciapos_tuple_get(a, 0).tag == CIAPOS_TAGSYM);
-                }
-                assert(ciapos_tuple_get(args, 1).tag != CIAPOS_TAGNIL);
-                return ciapos_mkfunction(&self->top_of_heap, usercode_eval, args, stack);
+                return parsefn(self, stack, args);
             }
         }
         ciapos_sexp function = ciapos_vm_eval_withstack(self, stack, fexpr);
         assert(function.tag == CIAPOS_TAGFN);
-        return ciapos_function_eval(function, self, eval_args(self, stack, ciapos_tuple_get(expr, 1)));
+        ciapos_sexp args = eval_args(self, stack, ciapos_tuple_get(expr, 1));
+        return ciapos_function_eval(function, self, args);
     }
 }
