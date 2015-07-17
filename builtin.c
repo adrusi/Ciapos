@@ -210,8 +210,6 @@ static ciapos_sexp inpkg_evaluator(ciapos_vm *vm, ciapos_sexp _fbody, ciapos_sex
 METADATA(inpkg);
 
 static ciapos_sexp setexpansion_evaluator(ciapos_vm *vm, ciapos_sexp _fbody, ciapos_sexp _env, ciapos_sexp args) {
-    ciapos_sexp_debug(&vm->registry, args);
-    printf("\n");
     assert(args.tag == CIAPOS_TAGTUP);
     assert(args.tuple->length == 2);
     ciapos_sexp car = ciapos_tuple_get(args, 0);
@@ -227,3 +225,26 @@ static ciapos_sexp setexpansion_evaluator(ciapos_vm *vm, ciapos_sexp _fbody, cia
 }
 
 METADATA(setexpansion);
+
+static ciapos_sexp envset_evaluator(ciapos_vm *vm, ciapos_sexp _fbody, ciapos_sexp _env, ciapos_sexp args) {
+    assert(args.tag == CIAPOS_TAGTUP);
+    assert(args.tuple->length == 2);
+    ciapos_sexp car = ciapos_tuple_get(args, 0);
+    assert(car.tag == CIAPOS_TAGTUP);
+    ciapos_sexp caar = ciapos_tuple_get(car, 0);
+    assert(caar.tag == CIAPOS_TAGENV);
+    ciapos_sexp cdr = ciapos_tuple_get(args, 1);
+    assert(cdr.tag == CIAPOS_TAGTUP);
+    assert(cdr.tuple->length == 2);
+    ciapos_sexp cdar = ciapos_tuple_get(cdr, 0);
+    assert(cdar.tag == CIAPOS_TAGSYM);
+    ciapos_sexp cddr = ciapos_tuple_get(cdr, 1);
+    assert(cddr.tag == CIAPOS_TAGTUP);
+    assert(cddr.tuple->length == 2);
+    ciapos_sexp cddar = ciapos_tuple_get(cddr, 0);
+    assert(ciapos_tuple_get(cddr, 1).tag == CIAPOS_TAGNIL);
+    ciapos_environment_put(caar, cdar.symbol, cddar);
+    return (ciapos_sexp) { .tag = CIAPOS_TAGNIL, .debug_info = 0 };
+}
+
+METADATA(envset);

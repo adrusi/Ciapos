@@ -19,6 +19,7 @@ static ciapos_sexp install_builtins(ciapos_vm *self, ciapos_sexp thread) {
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "tuple-set!"), ciapos_builtin_set);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "tuple-get"), ciapos_builtin_get);
     ciapos_environment_put(env, ciapos_symbolof(&self->registry, "set-expansion"), ciapos_builtin_setexpansion);
+    ciapos_environment_put(env, ciapos_symbolof(&self->registry, "env-set"), ciapos_builtin_envset);
     ciapos_sexp newthread = ciapos_mktuple(&self->top_of_heap, 2);
     ciapos_tuple_put(newthread, 0, env);
     ciapos_tuple_put(newthread, 1, thread);
@@ -180,6 +181,10 @@ static ciapos_sexp ciapos_vm_eval_withstack(ciapos_vm *self, ciapos_sexp stack, 
             if (fexpr.symbol == ciapos_symbolof(&self->registry, "std:lambda")) {
                 ciapos_sexp args = ciapos_tuple_get(expr, 1);
                 return parsefn(self, stack, args);
+            }
+            if (fexpr.symbol == ciapos_symbolof(&self->registry, "std:env")) {
+                assert(ciapos_tuple_get(expr, 1).tag == CIAPOS_TAGNIL);
+                return stack;
             }
         }
         ciapos_sexp function = ciapos_vm_eval_withstack(self, stack, fexpr);
